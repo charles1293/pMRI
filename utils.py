@@ -49,6 +49,29 @@ def reconstruct(reduced_FoV,S,psi):
             reconstructed[indices,n] = np.real(x_hat)
     
     return reconstructed
+
+
+def reconstruct_tikhonov(reduced_FoV,S,psi,lam):
+    [Size_red,Size,Nc] = reduced_FoV.shape
+    delta = round(Size_red/2)
+    reconstructed = np.zeros((Size,Size))
+    psi_1 = np.linalg.pinv(psi)
+    R = round(Size/Size_red)
+
+    for m in range(Size_red):
+        for n in range(Size):
+            indices = []
+            for r in range(0,R):
+                indices.append((m+delta+r*Size_red)%Size)
+
+            s = S[indices,n,:].transpose()
+            A = reduced_FoV[m,n,:]
+            system = s.transpose() @ psi_1 @ s + lam * np.eye(R)
+            rhs = s.transpose() @ psi_1 @ A
+            x_hat = np.linalg.pinv(system) @ rhs
+            reconstructed[indices,n] = np.real(x_hat)
+
+    return reconstructed
             
             
 def SignalToNoiseRatio(x_reference,x):

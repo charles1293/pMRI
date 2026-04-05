@@ -129,3 +129,75 @@ plt.legend()
 plt.tight_layout()
 plt.savefig('q3_snr_comparison.png', dpi=150, bbox_inches='tight')
 
+
+# QUESTION 4
+# Regularisation de Tikhonov (sans detail de derivation)
+sigma_q4 = 10
+lam_values = [0.01, 0.1, 1, 10]
+psi_q4 = (sigma_q4 ** 2) * np.eye(Nc)
+
+baseline_r2 = reconstruct(results_q1[sigma_q4], S, psi_q4)
+baseline_r4 = reconstruct(results_q2[sigma_q4], S, psi_q4)
+
+snr_baseline_r2 = SignalToNoiseRatio(ref, np.abs(baseline_r2))
+snr_baseline_r4 = SignalToNoiseRatio(ref, np.abs(baseline_r4))
+
+snr_lam_r2 = []
+snr_lam_r4 = []
+recon_lam_r2 = []
+recon_lam_r4 = []
+
+for lam in lam_values:
+    rec_r2_lam = reconstruct_tikhonov(results_q1[sigma_q4], S, psi_q4, lam)
+    rec_r4_lam = reconstruct_tikhonov(results_q2[sigma_q4], S, psi_q4, lam)
+
+    recon_lam_r2.append(rec_r2_lam)
+    recon_lam_r4.append(rec_r4_lam)
+    snr_lam_r2.append(SignalToNoiseRatio(ref, np.abs(rec_r2_lam)))
+    snr_lam_r4.append(SignalToNoiseRatio(ref, np.abs(rec_r4_lam)))
+
+cols = 2 + len(lam_values)
+fig, axes = plt.subplots(2, cols, figsize=(3.2 * cols, 8.2))
+
+axes[0, 0].imshow(np.abs(ref), cmap='gray')
+axes[0, 0].set_title('Reference')
+axes[0, 0].axis('off')
+
+axes[1, 0].imshow(np.abs(ref), cmap='gray')
+axes[1, 0].set_title('Reference')
+axes[1, 0].axis('off')
+
+axes[0, 1].imshow(np.abs(baseline_r2), cmap='gray')
+axes[0, 1].set_title(f'R=2, sans reg\nSNR={snr_baseline_r2:.2f} dB', fontsize=10)
+axes[0, 1].axis('off')
+
+axes[1, 1].imshow(np.abs(baseline_r4), cmap='gray')
+axes[1, 1].set_title(f'R=4, sans reg\nSNR={snr_baseline_r4:.2f} dB', fontsize=10)
+axes[1, 1].axis('off')
+
+for i, lam in enumerate(lam_values):
+    axes[0, i + 2].imshow(np.abs(recon_lam_r2[i]), cmap='gray')
+    axes[0, i + 2].set_title(f'R=2, λ={lam}\nSNR={snr_lam_r2[i]:.2f} dB', fontsize=10)
+    axes[0, i + 2].axis('off')
+
+    axes[1, i + 2].imshow(np.abs(recon_lam_r4[i]), cmap='gray')
+    axes[1, i + 2].set_title(f'R=4, λ={lam}\nSNR={snr_lam_r4[i]:.2f} dB', fontsize=10)
+    axes[1, i + 2].axis('off')
+
+fig.suptitle('Tikhonov, σ=10: comparaison sans/avec regularisation', fontsize=14, y=0.98)
+fig.subplots_adjust(top=0.90, hspace=0.24, wspace=0.08)
+plt.savefig('q4_tikhonov_reconstructions.png', dpi=150)
+
+plt.figure(figsize=(7.2, 4.2))
+plt.plot([0] + lam_values, [snr_baseline_r2] + snr_lam_r2, marker='o', label='R=2')
+plt.plot([0] + lam_values, [snr_baseline_r4] + snr_lam_r4, marker='s', label='R=4')
+plt.xscale('symlog', linthresh=0.01)
+plt.xticks([0, 0.01, 0.1, 1, 10], ['0 (sans reg)', '0.01', '0.1', '1', '10'])
+plt.xlabel('Valeur de λ')
+plt.ylabel('SNR (dB)')
+plt.title('Effet de λ sur le SNR (σ=10)')
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.savefig('q4_tikhonov_snr_vs_lambda.png', dpi=150, bbox_inches='tight')
+
