@@ -8,7 +8,6 @@ Created on Mon Mar  8 10:04:52 2021
 
 import numpy as np
 from numpy import linalg as LA
-from math import log
 
 def pMRI_simulator(S,ref,sigma,R):
     Nc = S.shape[2]
@@ -46,7 +45,8 @@ def reconstruct(reduced_FoV,S,psi):
                 indices.append((m+delta+r*Size_red)%Size)
             s = S[indices,n,:].transpose()
             A = reduced_FoV[m,n,:]
-            #reconstructed = ...
+            x_hat = np.linalg.pinv(s.transpose() @ psi_1 @ s) @ (s.transpose() @ psi_1 @ A)
+            reconstructed[indices,n] = np.real(x_hat)
     
     return reconstructed
             
@@ -61,7 +61,7 @@ def SignalToNoiseRatio(x_reference,x):
     noise_norm = LA.norm(noise.flatten())
     
     if noise_norm > 0:
-        snr = 20 * log10(signal_norm / noise_norm)
+        snr = 20 * np.log10(signal_norm / noise_norm)
     else:
         snr = float('inf')
     
